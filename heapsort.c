@@ -10,18 +10,20 @@ void swap(int* ,int, int);
 
 int main(int argc, char* argv[]) {
 	int a[1000];
-	int last = print_array(argv[1], a); // last is heapsize - 1
-	heapsort(a, &last);
+	int last = readfile(argv[1], a); // last is heapsize - 1
+	int* b;
+	b = heapsort(a, &last);
 
-	print_array(a, last);
+	print_array(b, last);
 }
 
-int* heapsort(int* a, int* last)
-	int b[last+1];
-	build_heap(a, last);
+int* heapsort(int* a, int* last) {
+	int temp = *last;
+	int b[temp + 1];
+	build_heap(a, temp);
 	int i = 0;
-	while(i <= last) {
-		b[i] = extract_root(a, &last);
+	while(i <= temp) {
+		b[i] = extract_root(a, last);
 		i++;
 	}
 	return b;
@@ -37,8 +39,9 @@ int extract_root(int* a, int* last) {
 	int temp;
 	if(last != -1) {
 		temp = a[0];
-		a[0] = a[last];
-		max_heapify(a, 0, last);
+		a[0] = a[*last];
+		max_heapify(a, 0, *last);
+		*last--;
 		return temp;
 	}
 	return NULL;
@@ -46,8 +49,8 @@ int extract_root(int* a, int* last) {
 
 void max_heapify(int* a, int num, int last) {
 	int largest = num;
-	int left_child = left_child(num);
-	int right_child = right_child(num);
+	int left_child = find_left_child(num);
+	int right_child = find_right_child(num);
 	if( (left_child <= last) && (a[left_child] > a[largest]) ) {
 		largest = left_child;
 	}
@@ -59,11 +62,11 @@ void max_heapify(int* a, int num, int last) {
 	}
 }
 
-int left_child(int num) {
-	return 2*a+1;
+int find_left_child(int num) {
+	return 2*num+1;
 }
-int right_child(int num) {
-	return 2*a+2;
+int find_right_child(int num) {
+	return 2*num+2;
 }
 
 void swap(int* a, int input1, int input2) {
