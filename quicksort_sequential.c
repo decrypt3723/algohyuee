@@ -4,34 +4,12 @@
 #include <math.h>
 #include <time.h>
 
-void swap(int* a, int input1, int input2) {
-	int temp;
-	temp = a[input1];
-	a[input1] = a[input2];
-	a[input2] = temp;
-}
-
-int partition(int* array, int first, int last) {
-	int pivot = rand() % (last - first + 1);
-	int key = array[pivot + first];
-	int j = first;
-	swap(array, last, pivot + first);
-	for(int i = first; i < last; i++) {
-		if(key > array[i]) {
-			swap(array,i,j);
-			j++;
-		}
-	}
-	swap(array, last, j);
-	return j;
-}
-
-void quicksort(int* array, int first, int last) {
-	if(last > first) {
-		int pivot = partition(array, first, last);
-		quicksort(array, first, pivot-1);
-		quicksort(array, pivot+1, last);
-	}	
+void swap(int *a, int input1, int input2)
+{
+    int temp;
+    temp = a[input1];
+    a[input1] = a[input2];
+    a[input2] = temp;
 }
 
 int readfile(char *filename_input, int **arrayptr)
@@ -89,18 +67,55 @@ void write_file_array(char *output_name, int *array, int last)
     fclose(fptw);
 }
 
+int partition(int* array, int first, int last) {
+	int pivot = rand() % (last - first + 1);
+	int key = array[pivot + first];
+	int j = first;
+	swap(array, last, pivot + first);
+	for(int i = first; i < last; i++) {
+		if(key > array[i]) {
+			swap(array,i,j);
+			j++;
+		}
+	}
+	swap(array, last, j);
+	return j;
+}
+
+void quicksort_sequential(int* arr, int last) { 
+    int* stack = (int*)malloc(sizeof(int)*(last + 1)); 
+    int top = -1;
+    int left = 0;
+    int right = last;
+  
+    stack[++top] = left; 
+    stack[++top] = right; 
+  
+    while (top >= 0) { 
+        right = stack[top--]; 
+        left = stack[top--]; 
+        int p = partition(arr, left, right); 
+        if (p - 1 > left) { 
+            stack[++top] = left; 
+            stack[++top] = p - 1; 
+        } 
+        if (p + 1 < right) { 
+            stack[++top] = p + 1; 
+            stack[++top] = right; 
+        } 
+    }
+    free(stack);
+}
+
 int main(int argc, char* argv[]) {
-	srand((unsigned)time(NULL));
-	int* a;
-	int** aptr = &a;
-	int first = 0;
-	int last = readfile(argv[1], aptr);
+    int* a;
+    int** aptr = &a;
+    int last = readfile(argv[1], aptr);
     clock_t start, end;
 
-	start = clock();
-	quicksort(a, first, last);
-	end = clock();
-
-	printf("%.3lf msec have taken for sorting.", (double)end-start);
+    start = clock();
+    quicksort_sequential(a, last);
+    end = clock();
+    printf("%.3lf msec have taken for sorting.", (double)end-start);
     write_file_array(argv[2], a, last);
 }
