@@ -83,7 +83,6 @@ void merge(int* a, int q, int r, int middle) {
 			j++;
 		}
 		k++;
-
 	}
 	
 	i = q;
