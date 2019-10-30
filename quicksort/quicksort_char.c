@@ -12,15 +12,35 @@ void swap(int* a, int input1, int input2) {
 	a[input2] = temp;
 }
 
+// median of three implemented
+//
 int partition(int* array, int first, int last) {
-	srand(time(NULL));
-	int p = RAND_MAX*(rand()) + rand();
-	int pivot = first + (int)(p*(last-first+1));
-	int key = array[pivot];
-	swap(array, last, pivot);
-	int j = first;
-	for(int i = first+1; i < last; i++) {
-		if(key >= array[i]) {
+	int median = first + (last-first)/2;
+	int i, key, j;
+	int* temp = (int*)malloc(sizeof(int)*3);
+	
+	temp[0] = array[first];
+	temp[1] = array[median];
+	temp[2] = array[last];
+
+	//bubble sort of 3 elements
+	for(i = 2; i > 0; i--) {
+		for(j = 0; j < i; j++) {
+			if(temp[j] > temp[j+1]) {
+			swap(temp, j, j+1);
+			}
+		}
+	}
+	array[first] = temp[0];
+	array[median] = temp[2];
+	array[last] = temp[1];
+	free(temp);	
+	
+	key = array[last];
+	j = first;
+	
+	for(i = first; i < last; i++) {
+		if(key > array[i]) {
 			swap(array,i,j);
 			j++;
 		}
@@ -115,7 +135,7 @@ void write_file_array(char *output_name, int *array, int last)
     FILE *fptw = fopen(output_name, "w");
     for (int i = 0; i <= last; i++)
     {
-        fprintf(fptw, "%c ", (char)(array[i]) );
+        fprintf(fptw, "%c ", (char)(array[i]));
     }
     fclose(fptw);
 }
@@ -126,7 +146,6 @@ int main(int argc, char* argv[]) {
 	int first = 0;
 	int last = readfile(argv[1], aptr);
     clock_t start, end;
-
 	start = clock();
 	quicksort(a, first, last);
 	end = clock();
