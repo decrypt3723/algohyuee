@@ -70,7 +70,7 @@ int readfile(char *filename_input, int **arrayptr)
     char filename[150];
     char stringbuf[50];
     int i = 0;
-    char buf;
+    int buf;
     strcpy(filename, filename_input);
     if ((fptr = fopen(filename, "r")) == NULL)
     {
@@ -78,7 +78,7 @@ int readfile(char *filename_input, int **arrayptr)
         exit(1);
     }
     // deciding size of array
-    while ((fscanf(fptr, "%c ", &buf)) != EOF)
+    while ((fscanf(fptr, "%d ", &buf)) != EOF)
     {
         i++;
     }
@@ -88,9 +88,9 @@ int readfile(char *filename_input, int **arrayptr)
     rewind(fptr);
 
     i = 0;
-    while ((fscanf(fptr, "%c ", &buf)) != EOF)
+    while ((fscanf(fptr, "%d ", &buf)) != EOF)
     {
-        (*arrayptr)[i++] = (int)buf;
+        (*arrayptr)[i++] = buf;
     }
     fclose(fptr);
     return i - 1;
@@ -115,7 +115,7 @@ void write_file_array(char *output_name, int *array, int last)
     FILE *fptw = fopen(output_name, "w");
     for (int i = 0; i <= last; i++)
     {
-        fprintf(fptw, "%c ", (char)(array[i]) );
+        fprintf(fptw, "%d ", array[i]);
     }
     fclose(fptw);
 }
