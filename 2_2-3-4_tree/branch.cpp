@@ -10,35 +10,31 @@ typedef struct node {
     int size;    // 편의를 위해 node의 크기 정보 저장
 } _node;
 
+int node_size(struct node* node) {
+    for(int i = 0; i < 3; i++) {    // -1이 몇 번째에서부터 들어있는지로 size 판단
+        if(node->key[i] == -1) {
+            return i;
+        }
+    }
+    return 3; // 위에 해당하지 않으면 size 3
+}
+
 void print_node(struct node* node) {
     printf("( ");
-    for(int i = 0; i < node->size; i++) {
+    for(int i = 0; i < node_size(node); i++) {
         printf("%d ", node->key[i]);
     }
     printf(") ");
     // printf("[%d] ", node->size);
 }
 
-void init_node(struct node* node) { // pointer를 NULL 초기화 하는 것이 핵심 역할
-    node->size = 0;
+void init_node(struct node* node) { // key를 -1로 초기화, pointer를 NULL로 초기화
     for(int i = 0; i < 4; i++) {
         node->child[i] = NULL;
     }
-    node->key[0] = 0;
-    node->key[1] = 0;
-    node->key[2] = 0;
-}
-
-int node_size(struct node* node) {
-    if( node->child[1] == NULL ) { // 첫번째 child, 두번째 child == NULL이면 size 0 
-        return 0;
-    }
-    for(int i = 2; i < 4; i++) {    // 세번째 child == NULL이면 size 1, 네번째 child == NULL이면 size 2
-        if(node->child[i] == NULL) {
-            return i - 1;
-        }
-    }
-    return 3; // 위에 해당하지 않으면 size 3
+    node->key[0] = -1;
+    node->key[1] = -1;
+    node->key[2] = -1;
 }
 
 typedef struct stack_node_container { // target node를 찾은 후 지나간 node들과 node를 같이 return하기 위한 struct
@@ -56,12 +52,12 @@ void find_node(struct node* root, int key, struct stack_node_container* containe
     // } 
     while(traverse_node->child[0]) { // 첫번째 child pointer가 없으면 끄트머리 node라고 할 수 있다~
         (container->parent_stack).push(traverse_node); // 현재 node는 일단 stack에 넣고 본다.
-        for(int i = 0; i < (traverse_node->size); i++) {
+        for(int i = 0; i < (node_size(traverse_node)); i++) {
             if( key <= (traverse_node->key[i]) ) { // 동일한 key의 경우 왼쪽으로 가도록 하였음, 같은 값이면 동일 노드에서 왼쪽에 위치 (같은 값이 같은 노드에 있는 건 끄트머리 node에서 뿐)
                 traverse_node = traverse_node->child[i];
                 break;
             }
-            if(i == ( (traverse_node->size) - 1)) {       // 마지막 child로 가는 경우는 예외적으로 처리
+            if(i == ( (node_size(traverse_node)) - 1)) {       // 마지막 child로 가는 경우는 예외적으로 처리
                 traverse_node = traverse_node->child[i+1];
                 break;
             }
@@ -84,7 +80,7 @@ void find_node(struct node* root, int key, struct stack_node_container* containe
 
 int find_pointer_from(struct node* me, struct node* parent) { // parent 몇 번째 포인터가 me를 가르키는지 알려줌
     int i = 0;
-    for(i = 0; i < ( (parent->size) + 1); i++) { // iterate parent's child
+    for(i = 0; i < ( (node_size(parent)) + 1); i++) { // iterate parent's child
         if(parent->child[i] == me) {
             return i;
         }
@@ -143,16 +139,14 @@ void insert_234(struct node** root, int key) { // root 변경 가능성 있으�
     int i = 0;
     int j = 0;
     
-    if(target_node->size == 0) { // empty tree에 넣는 원소인 경우
+    if(node_size(target_node) == 0) { // empty tree에 넣는 원소인 경우
         target_node->key[0] = key;
-        (target_node->size)++; //해당 node의 size는 1 증가했다!
         //printf("\n--case 1--\n");
         return ;
     }
-    else if( (target_node->size) < 3) { // insertion은 끄트머리 node에서만 일어나며, 단순하게 처리 가능
-        (target_node -> key[target_node->size]) = key;
-        (target_node->size)++; // 해당 node의 size는 1 증가했다!
-        std::sort(target_node->key, (target_node->key) + (target_node->size));
+    else if( (node_size(target_node)) < 3) { // insertion은 끄트머리 node에서만 일어나며, 단순하게 처리 가능
+        (target_node -> key[node_size(target_node)]) = key;
+        std::sort(target_node->key, (target_node->key) + (node_size(target_node)));
         //printf("\n--case 2--\n");
         return ;
     }
@@ -183,14 +177,12 @@ void insert_234(struct node** root, int key) { // root 변경 가능성 있으�
             init_node(leftnode);
             init_node(rightnode);
 
-            leftnode->size = 2;
             leftnode->key[0] = tempkey[0];
             leftnode->key[1] = tempkey[1];
             leftnode->child[0] = tempptr[0];
             leftnode->child[1] = tempptr[1];                
             leftnode->child[2] = tempptr[2];
 
-            rightnode->size = 1;
             rightnode->key[0] = tempkey[3];
             rightnode->child[0] = tempptr[3];
             rightnode->child[1] = tempptr[4];
@@ -203,12 +195,10 @@ void insert_234(struct node** root, int key) { // root 변경 가능성 있으�
                 (*root)->key[0] = key;
                 (*root)->child[0] = leftnode;
                 (*root)->child[1] = rightnode;
-                (*root)->size = 1;
                 return ;
-            } else if ( ( p_stack.top()->size ) < 3) {
-                index = get_key_index(key, p_stack.top()->key, p_stack.top()->size);
-                node_insert(p_stack.top()->key, p_stack.top()->child, leftnode, rightnode, key, index, p_stack.top()->size);
-                (p_stack.top()->size)++;
+            } else if ( ( node_size(p_stack.top()) ) < 3) {
+                index = get_key_index(key, p_stack.top()->key, node_size(p_stack.top()));
+                node_insert(p_stack.top()->key, p_stack.top()->child, leftnode, rightnode, key, index, node_size(p_stack.top()));
                 return ;
             }
             //임시 공간에 parent를 불러옴
@@ -218,8 +208,8 @@ void insert_234(struct node** root, int key) { // root 변경 가능성 있으�
             for(i = 0; i < 4; i++) {
                 tempptr[i] = p_stack.top()->child[i];
             }
-            index = get_key_index(key, tempkey, p_stack.top()->size);
-            node_insert(tempkey, tempptr, leftnode, rightnode, key, index, p_stack.top()->size);
+            index = get_key_index(key, tempkey, node_size(p_stack.top()));
+            node_insert(tempkey, tempptr, leftnode, rightnode, key, index, node_size(p_stack.top()));
             target_node = p_stack.top();
             p_stack.pop();
         } while(1);
@@ -227,7 +217,7 @@ void insert_234(struct node** root, int key) { // root 변경 가능성 있으�
 }
 
 int find_delete_index(struct node* node, int key) { //해당 노드에 지울 key가 있으면 그 index를 return, 없으면 return -1
-    for(int i = 0; i < (node->size); i++) {
+    for(int i = 0; i < (node_size(node)); i++) {
         if(node->key[i] == key) { // 같은 key가 존재하는 경우 그 index를 return, 같은 값들이 노드에 들어있으면 가장 왼쪽 값이 선택됨
             return i;
         }
@@ -243,12 +233,12 @@ struct node* find_node_delete(struct node* root, int key, struct stack_node_cont
         index = find_delete_index(traverse_node, key);
         if(index == -1) { // 현재 node에 찾는 key 값이 없다면
             // 다음 노드로 진행
-            for(int i = 0; i < traverse_node->size; i++) {
+            for(int i = 0; i < node_size(traverse_node); i++) {
                 if(key <= traverse_node->key[i]) {
                     traverse_node = traverse_node->child[i];
                     break;
                 }
-                if(i == traverse_node->size - 1) {
+                if(i == node_size(traverse_node) - 1) {
                     traverse_node = traverse_node->child[i+1];
                     break;
                 }
@@ -269,7 +259,7 @@ struct node* predecessor_node(struct node* node, int index, struct stack_node_co
     node = node->child[index]; // 처음에는 왼쪽으로 한 번 간다
     while(node->child[0] != NULL) {
         container->parent_stack.push(node); // 현 node를 parent stack에 push
-        node = node->child[node->size]; // 맨 오른쪽 node로 계속 가버림
+        node = node->child[node_size(node)]; // 맨 오른쪽 node로 계속 가버림
     }
     // 이 경우 parent stack에는 return 되는 node의 parent까지만 들어가있다.
     return node;
@@ -285,7 +275,7 @@ struct node* find_left_sibling(struct node* me, struct node* parent) {
 
 struct node* find_right_sibling(struct node* me, struct node* parent) {
     int index = find_pointer_from(me, parent);
-    if(index == (parent->size)) { // index = parent의 size일 경우 right sibling이 없으므로 아무것도 return하지 않음.
+    if(index == (node_size(parent))) { // index = parent의 size일 경우 right sibling이 없으므로 아무것도 return하지 않음.
         return NULL;
     }
     return parent->child[index+1];
@@ -301,40 +291,40 @@ void left_transfer(struct node* me, struct node* parent) {
     me->size = 1;
     me->key[0] = parent->key[find_pointer_from(me,parent) - 1]; //parent의 left key를 me로 가져옴
     me->child[1] = me->child[0]; // dangling node를 오른쪽으로 이동
-    me->child[0] = left_sibling->child[left_sibling->size]; //left sibling의 rightest tree를 부착
+    me->child[0] = left_sibling->child[node_size(left_sibling)]; //left sibling의 rightest tree를 부착
     
-    parent->key[find_pointer_from(me, parent) - 1] = left_sibling->key[left_sibling->size - 1]; //parent에서는 key 교체만 일어남
+    parent->key[find_pointer_from(me, parent) - 1] = left_sibling->key[node_size(left_sibling) - 1]; //parent에서는 key 교체만 일어남
 
-    left_sibling->key[left_sibling->size - 1] = 0; // left_sibling의 rightest key 없어짐
-    left_sibling->child[left_sibling->size] = NULL; //left_sibling의 rightest child 없어짐
-    left_sibling->size--; // left_sibling의 size 감소
+    left_sibling->key[node_size(left_sibling) - 1] = -1; // left_sibling의 rightest key 없어짐
+    left_sibling->child[node_size(left_sibling) + 1] = NULL; //left_sibling의 rightest child 없어짐
 }
 void right_transfer(struct node* me, struct node* parent) {
+    int temp;
     struct node* right_sibling = find_right_sibling(me, parent);
     if(!right_sibling) {
         printf("no right sibling exist\n");
         return;
     }
-    me->size = 1;
     me->key[0] = parent->key[find_pointer_from(me,parent)];
     me->child[1] = right_sibling->child[0];
 
     parent->key[find_pointer_from(me,parent)] = right_sibling->key[0];
-    
-    for(int i = 0; i < ( right_sibling->size - 1 ); i++) {
+    temp = node_size(right_sibling);
+    for(int i = 0; i < ( temp - 1 ); i++) {
         right_sibling->key[i] = right_sibling->key[i+1];
         right_sibling->child[i] = right_sibling->child[i+1];
     }
-    right_sibling->child[right_sibling->size - 1] = right_sibling->child[right_sibling->size];
-    right_sibling->child[right_sibling->size] = NULL;
-    right_sibling->key[right_sibling->size - 1] = 0;
-    right_sibling->size --;
+    right_sibling->key[2] = -1;
+    right_sibling->child[temp - 1] = right_sibling->child[temp];
+    right_sibling->child[temp] = NULL;
+    right_sibling->key[temp - 1] = -1;
 }
 
 void fusion(struct node* me, struct node* parent) {
     struct node* sibling;
+    int temp;
     // this fusion's priority parent key is left.
-    if(parent->size == 0) {
+    if(node_size(parent) == 0) {
         printf("We can't fusion if parent's size is 0\n");
         return ;
     }
@@ -350,16 +340,15 @@ void fusion(struct node* me, struct node* parent) {
         sibling->key[0] = parent->key[find_pointer_from(sibling, parent) - 1];
         sibling->child[0] = me->child[0]; //
         free(me);
-        sibling->size++;
         // parent에서 빠진 값이 있어서 shifting 시전
-        for(int i = 0; i < (parent->size - 1); i++) {
+        temp = node_size(parent);
+        for(int i = 0; i < (temp - 1); i++) {
             parent->key[i] = parent->key[i+1];
             parent->child[i] = parent->child[i+1];
         }
-        parent->child[parent->size - 1] = parent->child[parent->size];
-        parent->key[parent->size - 1] = 0;
-        parent->child[parent->size] = NULL;
-        parent->size--;
+        parent->child[temp - 1] = parent->child[temp];
+        parent->key[temp - 1] = -1;
+        parent->child[temp] = NULL;
     } else {
         //left fusion
         sibling = find_left_sibling(me, parent);
@@ -367,18 +356,17 @@ void fusion(struct node* me, struct node* parent) {
         sibling->key[1] = parent->key[find_pointer_from(sibling, parent) ];
         sibling->child[2] = me->child[0]; // me의 dangling node를 sibling에 붙임
         free(me); // me doens't have any usage from now.
-        sibling->size++;
 
         //parent에서 key가 빠진 part를 shift
-        for(int i = find_pointer_from(sibling, parent); i < (parent->size - 1); i++) {
+        temp = node_size(parent);
+        for(int i = find_pointer_from(sibling, parent); i < (temp - 1); i++) {
             parent->key[i] = parent->key[i+1];
         }
-        for(int i = find_pointer_from(sibling, parent) + 1; i < (parent->size); i++) {
+        for(int i = find_pointer_from(sibling, parent) + 1; i < (temp); i++) {
             parent->child[i] = parent->child[i+1];
         }
-        parent->key[parent->size - 1] = 0;
-        parent->child[parent->size] = NULL;
-        parent->size--;
+        parent->key[temp - 1] = -1;
+        parent->child[temp] = NULL;
     }
     // parent의 size가 1이 였다면 fusion한 경우 여기서 parent는 size = 0이면서 child[0]를 가진 상태가 된다.
 }
@@ -388,7 +376,7 @@ void delete_234(struct node** root, int key) {
     struct stack_node_container* container = &container_o;
     int temp_int;
     std::stack<struct node*> p_stack; // 사용 편의를 위해 parent stack을 따로 걍 만듬
-    if((*root)->size == 0) { // 아무것도 없는 tree에서 deletion을 시행하는 경우 아무것도 하지 않는다.
+    if(node_size(*root) == 0) { // 아무것도 없는 tree에서 deletion을 시행하는 경우 아무것도 하지 않는다.
         return ;
     }
     struct node* node = find_node_delete(*root, key, container); // 여기서 node는 지울 key가 들어있는 node임
@@ -402,24 +390,23 @@ void delete_234(struct node** root, int key) {
     p_stack = container->parent_stack; // 사용 편의를 위해 그냥 p_stack object를 하나 만듬
 
     // 예외 처리, node == temp 인 경우 node 중간에 있는 key 값이 삭제되는 경우가 생김
+    temp_int = node_size(node);
     if(node == temp) {
-        for(int i = index; i < ( node->size - 1 ); i++) { // node 안에서 index 를 걍 밀어버림
+        for(int i = index; i < ( temp_int - 1 ); i++) { // node 안에서 index 를 걍 밀어버림
             node->key[i] = node->key[i+1];
         }
-        node->key[node->size - 1] = 0;
-        node->size--;
-        if(node->size != 0) { // 해당 node가 empty가 된 것이 아니라면 여기서 그냥 return
+        node->key[temp_int - 1] = -1;
+        if(node_size(node) != 0) { // 해당 node가 empty가 된 것이 아니라면 여기서 그냥 return
             return ;
         }
     } else { // 일반적인 경우
-        node->key[index] = temp->key[temp->size - 1]; // 찾은 predecessor 값을 지울 key가 들어있는 node에 넣어버림.
+        node->key[index] = temp->key[node_size(temp) - 1]; // 찾은 predecessor 값을 지울 key가 들어있는 node에 넣어버림.
 
         node = temp; // 이제 node는 맨 오른쪽 key 값이 비어있는 끄트머리 노드임
         
-        if( node->size > 1) { // 현 node size가 1보다 크면 그냥 node 안에서 삭제하고 끝 
+        if( node_size(node) > 1) { // 현 node size가 1보다 크면 그냥 node 안에서 삭제하고 끝 
             // node 안에서 삭제
-            node->size--;
-            node->key[node->size] = 0;
+            node->key[node_size(node)-1] = -1;
             return ;
         }
     }
@@ -432,13 +419,13 @@ void delete_234(struct node** root, int key) {
     // 이제 tree의 property를 맞추기 위해 노력해야 함
     do {
         if( ( temp = find_right_sibling(node, p_stack.top()) )!= NULL) { //오른쪽 sibling이 있고
-            if(temp->size > 1) { // 원소 갯수가 2개 이상이라면
+            if(node_size(temp) > 1) { // 원소 갯수가 2개 이상이라면
                 right_transfer(node, p_stack.top()); //transfer 후 종료
                 return;
             }
         }
         if( ( temp = find_left_sibling(node, p_stack.top()) )!= NULL) { //왼쪽 sibling이 있고
-            if(temp->size > 1) { // 원소 갯수가 2개 이상이라면
+            if(node_size(temp) > 1) { // 원소 갯수가 2개 이상이라면
                 left_transfer(node, p_stack.top()); //transfer 후 종료
                 return;
             }
@@ -447,24 +434,24 @@ void delete_234(struct node** root, int key) {
         fusion(node, p_stack.top());
         node = p_stack.top(); // 한 칸 위로 propagation
         p_stack.pop();
-        if((node == *root) && (node->size == 0)) { //node가 root이고 그 size가 0이라면
+        if((node == *root) && (node_size(node) == 0)) { //node가 root이고 그 size가 0이라면
             free(*root);
             *root = node->child[0]; // root를 현재 node의 child[0]로 바꾸고 return
             return ;
         }
-    } while(node->size == 0); // fusion후 노드의 size가 0이 되면 이를 다시 시행해야 함
+    } while(node_size(node) == 0); // fusion후 노드의 size가 0이 되면 이를 다시 시행해야 함
 }
 
 void search(node* root, int key) {
     struct stack_node_container container;
     if(node_size(root) == 0) {
-        printf("not exist\n");
+        printf("%d doesn't exist\n", key);
     }
     else if(find_node_delete(root, key, &container)){
-        printf("exist\n");
+        printf("%d exists\n", key);
     }
     else {
-        printf("not exist\n");
+        printf("%d doens't exist\n", key);
     }
     return ;
 }
@@ -522,8 +509,7 @@ int main(int argc, char* argv[]) {
         //batch mode
         fptr = fopen(argv[1],"r");
         fptw = freopen("./output.txt","w",stdout);
-        while(fscanf(fptr, "%c", &cbuf) != EOF) {
-            getchar();
+        while(fscanf(fptr, " %c", &cbuf) != EOF) {
             if(cbuf == 'i') {
                 fscanf(fptr, "%d", &ibuf);
                 insert_234(&root, ibuf);
@@ -540,6 +526,7 @@ int main(int argc, char* argv[]) {
             } else {
                 std::cout << "invalid command" << std::endl;
             }
+            std::cout << std::endl;
         }
     } else if (ibuf == 2){  
         //command mode
