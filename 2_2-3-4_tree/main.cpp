@@ -65,17 +65,6 @@ void find_node(struct node* root, int key, struct stack_node_container* containe
     }
     // 끄트머리 node를 추가해줘야 함.
     container->node = traverse_node; // child가 NULL이라서 나왔을 때 traverse_node는 끄트머리 node이다. 이를 container에 넣어준다.
-    // 지금보니 do-while문이 더 자연스럽다. 근데 귀찮으니까 안 고침.
-    // printf("\n-----finded node-----\n");
-    // printf("key is %d\n", key);
-    // print_node(traverse_node);
-    // printf("\n+++++++++++++++++++++\n");
-    
-    // if(!container->parent_stack.empty()) {
-    //     printf("\n-----top of stack-----\n");
-    //     print_node(container->parent_stack.top());
-    //     printf("\n+++++++++++++++++++++\n");
-    // }
 }
 
 int find_pointer_from(struct node* me, struct node* parent) { // parent 몇 번째 포인터가 me를 가르키는지 알려줌
